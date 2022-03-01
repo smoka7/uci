@@ -19,15 +19,6 @@ const (
 	IncludeLowerbounds uint = 1 << iota // include lowerbound results
 )
 
-// Options, for initializing the chess engine
-type Options struct {
-	MultiPV int  // number of principal variations (ranks top X moves)
-	Hash    int  // hash size in MB
-	Ponder  bool // whether the engine should ponder
-	OwnBook bool // whether the engine should use its opening book
-	Threads int  // max number of threads the engine should use
-}
-
 // scoreKey helps us save the latest unique result where unique is
 // defined as having unique values for each of the fields
 type scoreKey struct {
@@ -94,49 +85,6 @@ func NewEngine(path string, arg ...string) (*Engine, error) {
 	eng.stdin = bufio.NewWriter(stdin)
 	eng.stdout = bufio.NewReader(stdout)
 	return &eng, nil
-}
-
-// SetOptions sends setoption commands to the Engine
-// for the values set in the Options record passed in
-func (eng *Engine) SetOptions(opt Options) error {
-	var err error
-	if opt.MultiPV > 0 {
-		err = eng.SendOption("multipv", opt.MultiPV)
-		if err != nil {
-			return err
-		}
-	}
-	if opt.Hash > 0 {
-		err = eng.SendOption("hash", opt.Hash)
-		if err != nil {
-			return err
-		}
-	}
-	if opt.Threads > 0 {
-		err = eng.SendOption("threads", opt.Threads)
-		if err != nil {
-			return err
-		}
-	}
-	err = eng.SendOption("ownbook", opt.OwnBook)
-	if err != nil {
-		return err
-	}
-	err = eng.SendOption("ponder", opt.Ponder)
-	if err != nil {
-		return err
-	}
-	return err
-}
-
-// SendOption sends setoption command to the Engine
-func (eng *Engine) SendOption(name string, value interface{}) error {
-	_, err := eng.stdin.WriteString(fmt.Sprintf("setoption name %s value %v\n", name, value))
-	if err != nil {
-		return err
-	}
-	err = eng.stdin.Flush()
-	return err
 }
 
 // SetFEN takes a FEN string and tells the engine to set the position
